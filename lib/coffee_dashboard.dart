@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'coffee.dart';
 
@@ -10,26 +11,34 @@ class CoffeeDashboard extends StatefulWidget {
 
 class _CoffeeDashboardState extends State<CoffeeDashboard> {
   // 1. Ephemeral State: Our list of coffees loaded with test data
-  final List<Coffee> _coffees = [
-    Coffee(
-      id: '1',
-      name: 'Ethiopia Gagio',
-      roaster: 'Trader Joes',
-      roastLevel: 'Light',
-      process: 'Washed',
-      brews: 1,
-      notes: 'Bright, blueberry up front, a little thin at the end.',
-    ),
-    Coffee(
-      id: '2',
-      name: 'test 2',
-      roaster: 'b and b',
-      roastLevel: 'Light',
-      process: 'washed',
-      brews: 0,
-      notes: 'notes test 2',
-    ),
-  ];
+  List<Coffee> _coffees = [];
+  String? _editingCoffeeId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCoffees(); // Load saved data when the app boots
+  }
+
+  // Retrieve JSON strings from device storage and convert back to Coffee objects
+  Future<void> _loadCoffees() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String>? savedCoffees = prefs.getStringList('coffee_list');
+
+    if (savedCoffees != null) {
+      setState(() {
+        _coffees = savedCoffees.map((coffeeStr) => Coffee.fromJson(coffeeStr)).toList();
+      });
+    }
+  }
+
+  // Convert current list to JSON strings and save to device storage
+  Future<void> _persistCoffees() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> stringList = _coffees.map((c) => c.toJson()).toList();
+    await prefs.setStringList('coffee_list', stringList);
+  }
+
 
   // 2. Form Controllers: These read the text typed into the inputs
   final _nameController = TextEditingController();
@@ -39,9 +48,6 @@ class _CoffeeDashboardState extends State<CoffeeDashboard> {
 
   String _selectedRoast = 'Light';
   final List<String> _roastOptions = ['Light', 'Medium', 'Dark'];
-
-  // Tracks if we are editing an existing coffee or adding a new one
-  String? _editingCoffeeId;
 
   // Maps roast levels to specific colors for the card banners
   Color _getRoastColor(String roast) {
@@ -91,6 +97,8 @@ class _CoffeeDashboardState extends State<CoffeeDashboard> {
       }
     });
 
+    _persistCoffees();
+
     // Clear the form
     _nameController.clear();
     _roasterController.clear();
@@ -119,7 +127,8 @@ class _CoffeeDashboardState extends State<CoffeeDashboard> {
                 setState(() {
                   _coffees.removeWhere((coffee) => coffee.id == id);
                 });
-                Navigator.of(context).pop(); // Close the dialog
+                _persistCoffees(); // Save the new state after deletion
+                Navigator.of(context).pop();
               },
               style: TextButton.styleFrom(foregroundColor: const Color(0xFFD32F2F)),
               child: const Text('Delete'),

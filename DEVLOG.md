@@ -28,8 +28,8 @@ Modes: (1) Local dashboard for current coffee stash, (2) Brew logging, (3) Authe
 - [x] "Add a coffee" form implemented (Coffee, Roaster, Roast Level, Process, Notes).
 - [x] Edit and Delete functionality integrated with state management, including delete confirmation.
 - [x] Dynamic color-coding for coffee cards based on roast level.
-- [ ] AI integration defined and implemented for assignment requirements.
-- [ ] Local data persistence for coffee stash.
+- [x] Local data persistence using `shared_preferences` and JSON serialization.
+- [x] Added visual flair: layered coffee stain image using a `Stack` widget.
 
 ## Architecture & Tech Debt
 
@@ -39,3 +39,5 @@ Modes: (1) Local dashboard for current coffee stash, (2) Brew logging, (3) Authe
   - *Future Upgrade:* Integrate local storage (SQLite via `sqflite` or Hive) for offline persistence, eventually syncing with a remote backend (Firebase or a custom REST API) once user accounts are implemented.
 - **UI/UX:** Solid border used on form due to missing native dashed border in Flutter.
   - *Future Upgrade:* Implement custom painter or use the `dotted_border` package to match original design.
+- **Data Persistence:** Currently using `shared_preferences` to store JSON strings.
+  - *Future Upgrade:* For complex queries (like searching by roast or sorting by brew count), migrate to a local SQLite database using `sqflite` or an object database like Hive before wiring up a remote backend.
